@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600,600italic,700italic,700' rel='stylesheet' type='text/css'>
+  <title>Scratch Card</title>
+  <style type="text/css">
+    html {
+      box-sizing: border-box;
+    }
+
+    *,
+    *:before,
+    *:after {
+      box-sizing: inherit;
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+
+    .sc__wrapper {
+      width: auto;
+      height: 100vh;
+      max-width: calc(100vh * (1080 / 1920));
+      aspect-ratio: 1080 / 1920;
+      border: 5px solid white;
+      position: relative;
+    }
+
+    .sc__container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+	
+    }
+
+    .sc__container img {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: none; /* Initially hide the background image */
+		 
+    }
+
+    .sc__container canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="sc__wrapper">
+    <div id="js--sc--container" class="sc__container">
+      <img id="backgroundImage" src="./images/back.jpeg" alt="Background Image">
+      <canvas id="scratchCanvas"></canvas>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+      const canvas = document.getElementById('scratchCanvas');
+      const container = document.getElementById('js--sc--container');
+      const backgroundImage = document.getElementById('backgroundImage');
+      const ctx = canvas.getContext('2d');
+		
+
+      // Get the device pixel ratio
+      const devicePixelRatio = window.devicePixelRatio || 1;
+
+      // Set canvas dimensions
+      const containerWidth = container.clientWidth * devicePixelRatio;
+      const containerHeight = container.clientHeight * devicePixelRatio;
+      canvas.width = containerWidth;
+      canvas.height = containerHeight;
+
+      // Load the front image
+      const frontImage = new Image();
+      frontImage.src = './images/front.jpeg';
+      frontImage.onload = () => {
+        ctx.drawImage(frontImage, 0, 0, containerWidth, containerHeight);
+        ctx.globalCompositeOperation = 'destination-out';
+
+        // Show the background image only after the front image is loaded
+        backgroundImage.style.display = 'block';
+
+        // Add event listeners for scratch functionality
+        canvas.addEventListener('mousedown', startScratch);
+        canvas.addEventListener('touchstart', startScratch, { passive: false });
+
+        canvas.addEventListener('mouseup', endScratch);
+        canvas.addEventListener('mouseleave', endScratch);
+        canvas.addEventListener('touchend', endScratch);
+        canvas.addEventListener('touchcancel', endScratch);
+      };
+
+      let isScratching = false;
+
+      function startScratch(event) {
+        event.preventDefault();
+        isScratching = true;
+        scratch(event);
+        canvas.addEventListener('mousemove', scratch);
+        canvas.addEventListener('touchmove', scratch, { passive: false });
+      }
+
+      function endScratch() {
+        isScratching = false;
+        canvas.removeEventListener('mousemove', scratch);
+        canvas.removeEventListener('touchmove', scratch);
+      }
+
+      function scratch(event) {
+        if (!isScratching) return;
+
+        event.preventDefault();
+
+        const rect = canvas.getBoundingClientRect();
+        const scale = devicePixelRatio;
+
+        let clientX, clientY;
+        if (event.touches) {
+          clientX = event.touches[0].clientX;
+          clientY = event.touches[0].clientY;
+        } else {
+          clientX = event.clientX;
+          clientY = event.clientY;
+        }
+
+        const x = (clientX - rect.left) * scale;
+        const y = (clientY - rect.top) * scale;
+
+        ctx.beginPath();
+        ctx.arc(x, y, 8 * scale, 8, 7 * Math.PI);
+        ctx.fill();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      location.reload();
+    });
+  </script>
+</body>
+
+</html>
